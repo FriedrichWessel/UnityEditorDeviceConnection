@@ -5,6 +5,8 @@
 /[Bb]uilds/
 /Assets/AssetStoreTools*
 
+#Project sepcific 
+Assets/ExternalExamples
 # IntelliJ 
 .idea/
 
