@@ -13,72 +13,53 @@ public class BasicConnectionWindow : EditorWindow
 	{
 		// Get existing open window or if none, make a new one:
 		var window = (BasicConnectionWindow) EditorWindow.GetWindow(typeof(BasicConnectionWindow));
-		
+		window.Setup();
 		window.Show();
+	}
+ 
+	private void Setup()
+	{
+		_service = new ConnectionService();
+		_service.ServerDataReceived += UpdateServerData; 
+		_service.StartReceiveBroadcast();
 	}
 
 	private ConnectionService _service;
 
 	private string _command;
-	private string _address = GetLocalIPAddress();
-	private string _port = "8080";
 	void OnGUI()
 	{
-		if (_service != null)
+		if (_service == null) // react on re-compile
+		{
+			Setup();
+		}
+		if (string.IsNullOrEmpty(_service.Address))
+		{
+			GUILayout.Label("Waiting for Server....");
+		}
+		else
 		{
 			if (GUILayout.Button("StopServer"))
 			{
 				_service.Disconnect();
-				_service = null;
+				Setup();
 			}
+			
 			_command = GUILayout.TextField(_command);
 			if (GUILayout.Button("Send"))
 			{
 				_service.Send(_command);
 			}
 		}
-		else
-		{
-			if (GUILayout.Button("Scan For Server"))
-			{
-				var url = ConnectionService.ReceiveBroadCast();
-				if (!string.IsNullOrEmpty(url))
-				{
-					var data = url.Split(':');
-					var adress = data[0];
-					int port = Convert.ToInt32(data[1]);
-					_service = new ConnectionService();
-					_service.Address = adress;
-					_service.Port = port;
-					_service.ConnectToServer();
-				}
-			}
 			
-			_address = GUILayout.TextField(_address);
-			_port = GUILayout.TextField(_port);
-			if (GUILayout.Button("Start Client"))
-			{
-				_service = new ConnectionService();
-				_service.Address = _address;
-				_service.Port = Convert.ToInt32(_port);
-				_service.ConnectToServer();
-				
-			}
-			
-		}
 	}
-	
-	public static string GetLocalIPAddress()
+
+	private void UpdateServerData(ConnectionService.ServerData serverData)
 	{
-		var host = Dns.GetHostEntry(Dns.GetHostName());
-		foreach (var ip in host.AddressList)
-		{
-			if (ip.AddressFamily == AddressFamily.InterNetwork)
-			{
-				return ip.ToString();
-			}
-		}
-		throw new Exception("No network adapters with an IPv4 address in the system!");
+		_service.Address = serverData.IpAddress;
+		_service.Port = serverData.Port;
+		_service.ConnectToServer();
 	}
+
 	
 }

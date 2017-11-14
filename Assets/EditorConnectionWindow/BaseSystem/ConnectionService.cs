@@ -6,10 +6,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 
 public class ConnectionService : IConnectionService
 {
-	public event System.Action<string> MessageReceived = (message) => { }; 
+	public event System.Action<string> MessageReceived = (message) => { };
+	public event Action<ServerData> ServerDataReceived = (data) => { }; 
 	private string _address;
 	private int _port; 
 	
@@ -39,24 +41,13 @@ public class ConnectionService : IConnectionService
 	private TcpListener _receiver;
 	
 	private List<Client> _connectedClients = new List<Client>();
-
+	private List<ICommand> _activeCommands = new List<ICommand>();
 	public void StartServer()
 	{
 		var adress = IPAddress.Parse(Address); 
 		_receiver = new TcpListener(adress, Port);
 		_receiver.Start();
 		_receiver.BeginAcceptSocket(AcceptTcpClient, _receiver);
-		/*Socket socket = _receiver.AcceptSocket();
-		var size = socket.ReceiveBufferSize;
-		byte[] bytes = new byte[size];
-		var m = socket.Receive(bytes);
-		string message = ""; 
-		for (int i = 0; i < m; i++)
-		{
-			message += Convert.ToChar(bytes[i]);
-		}
-		MessageReceived(message);
-		socket.Close();*/
 	}
 
 	public void Tick()
@@ -72,15 +63,38 @@ public class ConnectionService : IConnectionService
 
 			}
 		}
+
+		foreach (var command in _activeCommands)
+		{
+			command.Execute();
+		}
+	}
+
+	public void StartBroadcastData(string data)
+	{
+		_activeCommands.Add(new UdpBroadcastSyncCommand(15000, data));
+	}
+
+	public void StopBroadcast()
+	{
+		ICommand commandToRemove = null; 
+		foreach (var command in _activeCommands)
+		{
+			if (command is UdpBroadcastSyncCommand)
+			{
+				commandToRemove = command;
+			}
+		}
+		if (commandToRemove != null)
+		{
+			_activeCommands.Remove(commandToRemove);
+		}
 	}
 
 	private void AcceptTcpClient(IAsyncResult ar) 
 	{
 		TcpListener listener = (TcpListener)ar.AsyncState;
 		_connectedClients.Add(new Client(listener.EndAcceptTcpClient(ar)));
-		//clients.Add (new ServerClient (listener.EndAcceptTcpClient (ar)));
-		//Debug.Log("New connection established");
-		//StartListening ();
 	}
 	
 	public void StopServer()
@@ -113,49 +127,74 @@ public class ConnectionService : IConnectionService
 		var oldUrl = URL;
 		URL = string.Format("{0}:{1}", Address, Port.ToString());
 	}
+
+	private UdpClient _broadcastReceiver;
+	private IPEndPoint _broadcastReceiveEndPoint;
+	public void StartReceiveBroadcast()
+	{
+		_broadcastReceiveEndPoint = new IPEndPoint(IPAddress.Any, 15000); 
+		_broadcastReceiver = new UdpClient(_broadcastReceiveEndPoint);
+		var state = new UdpState(_broadcastReceiveEndPoint, _broadcastReceiver);
+		_broadcastReceiver.BeginReceive(UpdateServerUrl, new object());
+	}
+
+	private  void UpdateServerUrl(IAsyncResult ar)
+	{
+		Byte[] receiveBytes = _broadcastReceiver.EndReceive(ar, ref _broadcastReceiveEndPoint);
+		string receiveString = Encoding.ASCII.GetString(receiveBytes);
+		ServerDataReceived(new ServerData(receiveString));
+	}
 	
-	public class Client
-	{
-		public TcpClient _tcpClient;
- 
-		public Client(TcpClient clientSocket) 
+	// THis should work
+	/* https://stackoverflow.com/questions/10832770/sending-udp-broadcast-receiving-multiple-messages
+	 *public class Receiver {
+  private readonly UdpClient udp = new UdpClient(15000);
+  private void StartListening()
+  {
+    this.udp.BeginReceive(Receive, new object());
+  }
+  private void Receive(IAsyncResult ar)
+  {
+    IPEndPoint ip = new IPEndPoint(IPAddress.Any, 15000);
+    byte[] bytes = udp.EndReceive(ar, ref ip);
+    string message = Encoding.ASCII.GetString(bytes);
+    StartListening();
+  }
+}
+
+public class Sender {
+  public void Send() {
+    UdpClient client = new UdpClient();
+    IPEndPoint ip = new IPEndPoint(IPAddress.Broadcast, 15000);
+    byte[] bytes = Encoding.ASCII.GetBytes("Foo");
+    client.Send(bytes, bytes.Length, ip);
+    client.Close();
+  }
+}
+	 * 
+	 */
+
+	public class UdpState{
+		public IPEndPoint EndPoint { get; private set; }
+		public UdpClient Client { get; private set; }
+
+		public UdpState(IPEndPoint endpoint, UdpClient client)
 		{
-			_tcpClient = clientSocket;
+			EndPoint = endpoint;
+			Client = client;
 		}
 	}
 
-	public IEnumerator BroadCastIPAndPort()
+	public class ServerData
 	{
-		var responseData = Encoding.ASCII.GetBytes(URL);     
-		while (true)
+		public string IpAddress { get; private set; }
+		public int Port { get; private set; }
+
+		public ServerData(string url)
 		{
-			var server = new UdpClient(8888);
-			var clientEp = new IPEndPoint(IPAddress.Any, 0);
-			var clientRequestData = server.Receive(ref clientEp);
-			var clientRequest = Encoding.ASCII.GetString(clientRequestData);
-
-			//Console.WriteLine($"Recived {clientRequest} from {clientEp.Address}, sending 
-			//response: {responseData}");
-			server.Send(responseData, responseData.Length, clientEp);
-			server.Close();
-			yield return new WaitForSeconds(1);
+			var data = url.Split(':');
+			IpAddress = data[0];
+			Port = Convert.ToInt32(data[1]);
 		}
-	}
-
-	public static string ReceiveBroadCast()
-	{
-		var Client = new UdpClient();
-		var RequestData = Encoding.ASCII.GetBytes("SomeRequestData");
-		var ServerEp = new IPEndPoint(IPAddress.Any, 0);
-
-		Client.EnableBroadcast = true;
-		Client.Send(RequestData, RequestData.Length, new IPEndPoint(IPAddress.Broadcast, 8888));
-
-		var ServerResponseData = Client.Receive(ref ServerEp);
-		var ServerResponse = Encoding.ASCII.GetString(ServerResponseData);
-		//Console.WriteLine("Recived {0} from {1}", ServerResponse, ServerEp.Address.ToString());
-
-		Client.Close();
-		return ServerResponse;
 	}
 }

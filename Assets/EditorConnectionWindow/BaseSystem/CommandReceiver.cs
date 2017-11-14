@@ -21,9 +21,10 @@ public class CommandReceiver : MonoBehaviour
 		_service.StartServer();
 		ServerText.text = string.Format("Server running on {0}", _service.URL);
 		MessageText.text = "Not received";
+		_service.StartBroadcastData(_service.URL);
 		//StartCoroutine(_service.BroadCastIPAndPort());
 	}
-
+	
 	private void UpdateMessageText(string message)
 	{
 		MessageText.text = message;
@@ -32,6 +33,7 @@ public class CommandReceiver : MonoBehaviour
 	private void OnDestroy()
 	{
 		_service.StopServer();
+		_service.StopBroadcast();
 		_service = null;
 	}
 
