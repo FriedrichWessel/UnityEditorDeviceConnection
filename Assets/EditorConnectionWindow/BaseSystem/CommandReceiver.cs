@@ -22,7 +22,6 @@ public class CommandReceiver : MonoBehaviour
 		ServerText.text = string.Format("Server running on {0}", _service.URL);
 		MessageText.text = "Not received";
 		_service.StartBroadcastData(_service.URL);
-		//StartCoroutine(_service.BroadCastIPAndPort());
 	}
 	
 	private void UpdateMessageText(string message)
