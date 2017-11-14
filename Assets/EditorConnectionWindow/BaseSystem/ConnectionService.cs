@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
@@ -66,13 +67,16 @@ public class ConnectionService : IConnectionService
 
 		foreach (var command in _activeCommands)
 		{
-			command.Execute();
+			if (!command.IsRunning)
+			{
+				command.Execute();
+			}
 		}
 	}
 
 	public void StartBroadcastData(string data)
 	{
-		_activeCommands.Add(new UdpBroadcastSyncCommand(15000, data));
+		_activeCommands.Add(new UdpBroadcastCommand(15000, data));
 	}
 
 	public void StopBroadcast()
@@ -80,7 +84,7 @@ public class ConnectionService : IConnectionService
 		ICommand commandToRemove = null; 
 		foreach (var command in _activeCommands)
 		{
-			if (command is UdpBroadcastSyncCommand)
+			if (command is UdpBroadcastCommand)
 			{
 				commandToRemove = command;
 			}
@@ -109,6 +113,11 @@ public class ConnectionService : IConnectionService
 		
 	}
 
+	public bool IsConnected()
+	{
+		return _publisher != null && _publisher.Connected; 
+	}
+
 	public void Disconnect()
 	{
 		_publisher.Close();
@@ -134,7 +143,6 @@ public class ConnectionService : IConnectionService
 	{
 		_broadcastReceiveEndPoint = new IPEndPoint(IPAddress.Any, 15000); 
 		_broadcastReceiver = new UdpClient(_broadcastReceiveEndPoint);
-		var state = new UdpState(_broadcastReceiveEndPoint, _broadcastReceiver);
 		_broadcastReceiver.BeginReceive(UpdateServerUrl, new object());
 	}
 
@@ -144,57 +152,6 @@ public class ConnectionService : IConnectionService
 		string receiveString = Encoding.ASCII.GetString(receiveBytes);
 		ServerDataReceived(new ServerData(receiveString));
 	}
-	
-	// THis should work
-	/* https://stackoverflow.com/questions/10832770/sending-udp-broadcast-receiving-multiple-messages
-	 *public class Receiver {
-  private readonly UdpClient udp = new UdpClient(15000);
-  private void StartListening()
-  {
-    this.udp.BeginReceive(Receive, new object());
-  }
-  private void Receive(IAsyncResult ar)
-  {
-    IPEndPoint ip = new IPEndPoint(IPAddress.Any, 15000);
-    byte[] bytes = udp.EndReceive(ar, ref ip);
-    string message = Encoding.ASCII.GetString(bytes);
-    StartListening();
-  }
-}
 
-public class Sender {
-  public void Send() {
-    UdpClient client = new UdpClient();
-    IPEndPoint ip = new IPEndPoint(IPAddress.Broadcast, 15000);
-    byte[] bytes = Encoding.ASCII.GetBytes("Foo");
-    client.Send(bytes, bytes.Length, ip);
-    client.Close();
-  }
-}
-	 * 
-	 */
 
-	public class UdpState{
-		public IPEndPoint EndPoint { get; private set; }
-		public UdpClient Client { get; private set; }
-
-		public UdpState(IPEndPoint endpoint, UdpClient client)
-		{
-			EndPoint = endpoint;
-			Client = client;
-		}
-	}
-
-	public class ServerData
-	{
-		public string IpAddress { get; private set; }
-		public int Port { get; private set; }
-
-		public ServerData(string url)
-		{
-			var data = url.Split(':');
-			IpAddress = data[0];
-			Port = Convert.ToInt32(data[1]);
-		}
-	}
 }

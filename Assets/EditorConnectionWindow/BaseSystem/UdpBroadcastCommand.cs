@@ -5,18 +5,32 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-public abstract class UdpBroadcastCommand : ICommand  {
+public class UdpBroadcastCommand : ICommand
+{
 
-	protected UdpClient BroadcastServer { get; set; }
-	protected IPEndPoint EndPoint { get; private set; }
-	protected byte[] Data { get; private set; }
+	public bool IsRunning { get; private set; }
+	private UdpClient _broadcastServer;
+	private IPEndPoint _endPoint;
+	private byte[] _data;
 
 	public UdpBroadcastCommand(int port, string data)
 	{
-		BroadcastServer = new UdpClient();
-		EndPoint = new IPEndPoint(IPAddress.Broadcast, port);
-		Data = Encoding.ASCII.GetBytes(data);
+		IsRunning = false;
+		_endPoint = new IPEndPoint(IPAddress.Broadcast, port);
+		_data = Encoding.ASCII.GetBytes(data);
 	}
 
-	public abstract void Execute();
+	public void Execute()
+	{
+		IsRunning = true;
+		SendData();
+	}
+
+	private void SendData()
+	{
+		_broadcastServer = new UdpClient();
+		_broadcastServer.Send(_data, _data.Length, _endPoint);
+		_broadcastServer.Close();
+		IsRunning = false;
+	}
 }

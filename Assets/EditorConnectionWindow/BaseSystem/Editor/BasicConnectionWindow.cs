@@ -33,7 +33,7 @@ public class BasicConnectionWindow : EditorWindow
 		{
 			Setup();
 		}
-		if (string.IsNullOrEmpty(_service.Address))
+		if (!_service.IsConnected())
 		{
 			GUILayout.Label("Waiting for Server....");
 		}
@@ -54,7 +54,7 @@ public class BasicConnectionWindow : EditorWindow
 			
 	}
 
-	private void UpdateServerData(ConnectionService.ServerData serverData)
+	private void UpdateServerData(ServerData serverData)
 	{
 		_service.Address = serverData.IpAddress;
 		_service.Port = serverData.Port;
