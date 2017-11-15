@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Video;
 
 public class BasicConnectionWindow : EditorWindow
 {
@@ -17,9 +18,11 @@ public class BasicConnectionWindow : EditorWindow
 	}
  
 	private ConnectionService _service;
-	private Dictionary<ServerData, float> _availableServer = new Dictionary<ServerData, float>();
-	private List<ServerData> _sortedServerList = new List<ServerData>();
-	private string[] _popupServerNames; 
+	private ServerData _connectedServer;
+	private List<AvailableServerData> _availableServer = new List<AvailableServerData>();
+	private string[] _popupServerNames;
+	private float _lastUpdateTime;
+	private float _currentTimeStamp; 
 	
 	private void Setup()
 	{
@@ -28,16 +31,26 @@ public class BasicConnectionWindow : EditorWindow
 		_service.StartReceiveBroadcast();
 		_popupServerNames = new string[10];
 		UpdateServerNameList();
-		
+		_lastUpdateTime = Time.realtimeSinceStartup;
+		_currentTimeStamp = Time.realtimeSinceStartup;
+
 	}
 
+	private void OnDestroy()
+	{
+		if (_service != null)
+		{
+			_service.Disconnect();
+			_service.StopReceiveBroadcast();
+		}
+	}
 
 	private string _command;
 	private int _currentServerIndex; 
 	void OnGUI()
 	{
-		
-		if (_service == null) // react on re-compile
+		UpdateWindow();
+		if (_service == null || _popupServerNames == null) // react on re-compile
 		{
 			return;
 			
@@ -47,13 +60,12 @@ public class BasicConnectionWindow : EditorWindow
 		{
 			int index = _currentServerIndex;
 			index = EditorGUILayout.Popup(_currentServerIndex, _popupServerNames);
-			if (index != _currentServerIndex)
+			if (index != _currentServerIndex && index > 0)
 			{
-				_currentServerIndex = index;
-				var serverData = _sortedServerList[_currentServerIndex-1];
-				ConnectToServer(serverData);
+				var server = _availableServer[index-1];
+				ConnectToServer(server.ServerData);
 			}
-			if (_service.IsConnected())
+			if (_connectedServer != null)
 			{
 				_currentServerIndex = index;
 				if (GUILayout.Button("StopServer"))
@@ -68,27 +80,82 @@ public class BasicConnectionWindow : EditorWindow
 					_service.Send(_command);
 				}
 			}
+			_currentServerIndex = index;
 		}
-			
+		
+
 	}
 
-	void Update()
+	private void UpdateAvailableServers(float deltaTime)
 	{
-		if (_service == null)
+		bool removedServer = false; 
+		for (int i = _availableServer.Count-1; i >= 0; i--)
+		{
+			if (Time.realtimeSinceStartup - _availableServer[i].LastConnectionTime > 10)
+			{
+				if (_connectedServer == _availableServer[i].ServerData)
+				{
+					_service.Disconnect();
+					_connectedServer = null;
+					_currentServerIndex = 0;
+				}
+				_availableServer.RemoveAt(i);
+				i--;
+				removedServer = true;
+			}
+		}
+
+		if (removedServer)
+		{
+			UpdateServerNameList();
+		}
+	}
+
+	// since there is no relialble Update source for EditorWindows - we take anyshot we can get
+	private void OnInspectorUpdate()
+	{
+		UpdateWindow();
+	}
+	
+	// since there is no relialble Update source for EditorWindows - we take anyshot we can get
+	private void Update()
+	{
+		UpdateWindow();
+	}
+
+	private void UpdateWindow()
+	{
+		if (_service == null || _popupServerNames == null)
 		{
 			Setup();
 		}
+		var timeSinceLastServerListUpdate = Time.realtimeSinceStartup - _lastUpdateTime;
+		if (timeSinceLastServerListUpdate > 1)
+		{
+			UpdateAvailableServers(timeSinceLastServerListUpdate);
+			_lastUpdateTime = Time.realtimeSinceStartup;
+		}
+		// realtime can only be used in Main.Thread
+		// so we store the last seen for the tcp callbacks
+		_currentTimeStamp = Time.realtimeSinceStartup;
 	}
 
 	private void UpdateServerData(ServerData serverData)
 	{
-		if (!_availableServer.ContainsKey(serverData))
+		bool serverIsRegistered = false; 
+		foreach (var server in _availableServer)
 		{
-			_availableServer.Add(serverData, 0);
-			_sortedServerList.Add(serverData);
+			if (server.ServerData.IpAddress == serverData.IpAddress)
+			{
+				server.LastConnectionTime = _currentTimeStamp;
+				serverIsRegistered = true;
+			}
+		}
+		if (!serverIsRegistered)
+		{ 
+			_availableServer.Add(new AvailableServerData(serverData));
 			UpdateServerNameList();
 		}
-		_availableServer[serverData] = 0;
 	}
 
 	private void UpdateServerNameList()
@@ -99,9 +166,14 @@ public class BasicConnectionWindow : EditorWindow
 		}
 		_popupServerNames[0] = "None";
 		
-		for (int i= 0; i < _sortedServerList.Count; i++)
+		for (int i= 0; i < _popupServerNames.Length-1; i++)
 		{
-			_popupServerNames[i+1] = _sortedServerList[i].IpAddress;
+			string name = null;
+			if (i < _availableServer.Count)
+			{
+				name = _availableServer[i].ServerData.IpAddress;
+			}
+			_popupServerNames[i+1] = name;
 		}
 		
 	}
@@ -115,6 +187,20 @@ public class BasicConnectionWindow : EditorWindow
 		_service.Address = serverData.IpAddress;
 		_service.Port = serverData.Port;
 		_service.ConnectToServer();
+		_connectedServer = serverData;
 	}
+	
+	private class AvailableServerData
+	{
+		public ServerData ServerData { get; private set; }
+		public float LastConnectionTime { get; set; }
+
+		public AvailableServerData(ServerData data)
+		{
+			ServerData = data;
+			LastConnectionTime = 0;
+		}
+	}
+
 
 }

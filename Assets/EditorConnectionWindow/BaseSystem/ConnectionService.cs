@@ -120,7 +120,10 @@ public class ConnectionService : IConnectionService
 
 	public void Disconnect()
 	{
-		_publisher.Close();
+		if (_publisher != null)
+		{
+			_publisher.Close();
+		}
 	}
 
 	public void Send(string command)
@@ -151,7 +154,16 @@ public class ConnectionService : IConnectionService
 		Byte[] receiveBytes = _broadcastReceiver.EndReceive(ar, ref _broadcastReceiveEndPoint);
 		string receiveString = Encoding.ASCII.GetString(receiveBytes);
 		ServerDataReceived(new ServerData(receiveString));
+		_broadcastReceiver.Close();
+		StartReceiveBroadcast();
 	}
 
 
+	public void StopReceiveBroadcast()
+	{
+		if (_broadcastReceiver != null)
+		{
+			_broadcastReceiver.Close();
+		}
+	}
 }
