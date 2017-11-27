@@ -64,8 +64,6 @@ public class ConnectionService : IConnectionService
 				MessageReceived(data);
 			}
 		}
-
-
 	}
 
 	private void AcceptTcpClient(IAsyncResult ar) 
