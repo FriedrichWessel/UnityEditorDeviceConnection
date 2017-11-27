@@ -13,22 +13,23 @@ public class CommandReceiver : MonoBehaviour
 	public UnityEngine.UI.Text MessageText;
 	public UnityEngine.UI.Text ServerText; 
 	
-	private ConnectionService _service;
+	private IConnectionServer _server;
 	private ICommandScheduler _scheduler;
 	private UdpBroadcastCommand _broadcastCommand;
 	
 	// Use this for initialization
 	void Start ()
 	{
+		var service = new ConnectionService();
 		_scheduler = new CommandScheduler();
-		_service = new ConnectionService();
-		_service.Address = _service.GetLocalIPAddress();
-		_service.Port = 8080;
-		_service.MessageReceived += UpdateMessageText;
-		_service.StartServer();
-		ServerText.text = string.Format("Server running on {0}", _service.URL);
+		_server = new TcpConnectionServer(service.GetLocalIPAddress(), 8081);
+		_server.MessageReceived += UpdateMessageText;
+		_server.StartServer();
+		ServerText.text = string.Format("Server running on {0}", _server.Adress+":" + _server.Port.ToString());
 		MessageText.text = "Not received";
-		_broadcastCommand = new UdpBroadcastCommand(8080, _service.URL);
+		
+		
+		_broadcastCommand = new UdpBroadcastCommand(15000, _server.Adress+":" + _server.Port.ToString());
 		_scheduler.AddCommand(_broadcastCommand);
 	}
 	
@@ -39,13 +40,13 @@ public class CommandReceiver : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		_service.StopServer();
+		_server.Disconnect();
 		_scheduler.RemoveCommand(_broadcastCommand);
-		_service = null;
 	}
 
 	void Update()
 	{
-		_service.Tick();
+		_server.Tick();
+		_scheduler.Tick();
 	}
 }

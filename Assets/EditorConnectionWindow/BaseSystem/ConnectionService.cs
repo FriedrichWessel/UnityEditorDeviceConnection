@@ -40,41 +40,30 @@ public class ConnectionService : IConnectionService
 	public string URL { get; private set; }
 	
 	private TcpClient _publisher;
-	private TcpListener _receiver;
-	
-	private List<Client> _connectedClients = new List<Client>();
+
+	private IConnectionServer _server;
 
 	public void StartServer()
 	{
-		var adress = IPAddress.Parse(Address); 
-		_receiver = new TcpListener(adress, Port);
-		_receiver.Start();
-		_receiver.BeginAcceptSocket(AcceptTcpClient, _receiver);
+		_server = new TcpConnectionServer(Address, Port);
+		_server.StartServer();
 	}
 
 	public void Tick()
 	{
-		foreach (var client in _connectedClients)
+		if (_server != null)
 		{
-			var stream = client._tcpClient.GetStream();
-			if (stream.DataAvailable)
-			{
-				var reader = new StreamReader(stream, true);
-				string data = reader.ReadLine();
-				MessageReceived(data);
-			}
+			_server.Tick();
 		}
-	}
-
-	private void AcceptTcpClient(IAsyncResult ar) 
-	{
-		TcpListener listener = (TcpListener)ar.AsyncState;
-		_connectedClients.Add(new Client(listener.EndAcceptTcpClient(ar)));
 	}
 	
 	public void StopServer()
 	{
-		_receiver.Stop();
+		if (_server != null)
+		{
+			_server.Disconnect();
+			_server = null; 
+		}
 	}
 
 	public void ConnectToServer()
