@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using EditorConnectionWindow.BaseSystem;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 
@@ -37,12 +38,12 @@ public class ConnectionService : IConnectionService
 		}
 	}
 	public string URL { get; private set; }
-
+	
 	private TcpClient _publisher;
 	private TcpListener _receiver;
 	
 	private List<Client> _connectedClients = new List<Client>();
-	private List<ICommand> _activeCommands = new List<ICommand>();
+
 	public void StartServer()
 	{
 		var adress = IPAddress.Parse(Address); 
@@ -61,38 +62,10 @@ public class ConnectionService : IConnectionService
 				var reader = new StreamReader(stream, true);
 				string data = reader.ReadLine();
 				MessageReceived(data);
-
 			}
 		}
 
-		foreach (var command in _activeCommands)
-		{
-			if (!command.IsRunning)
-			{
-				command.Execute();
-			}
-		}
-	}
 
-	public void StartBroadcastData(string data)
-	{
-		_activeCommands.Add(new UdpBroadcastCommand(15000, data));
-	}
-
-	public void StopBroadcast()
-	{
-		ICommand commandToRemove = null; 
-		foreach (var command in _activeCommands)
-		{
-			if (command is UdpBroadcastCommand)
-			{
-				commandToRemove = command;
-			}
-		}
-		if (commandToRemove != null)
-		{
-			_activeCommands.Remove(commandToRemove);
-		}
 	}
 
 	private void AcceptTcpClient(IAsyncResult ar) 
@@ -142,6 +115,8 @@ public class ConnectionService : IConnectionService
 
 	private UdpClient _broadcastReceiver;
 	private IPEndPoint _broadcastReceiveEndPoint;
+	
+
 	public void StartReceiveBroadcast()
 	{
 		_broadcastReceiveEndPoint = new IPEndPoint(IPAddress.Any, 15000); 
@@ -165,5 +140,18 @@ public class ConnectionService : IConnectionService
 		{
 			_broadcastReceiver.Close();
 		}
+	}
+	
+	public string GetLocalIPAddress()
+	{
+		var host = Dns.GetHostEntry(Dns.GetHostName());
+		foreach (var ip in host.AddressList)
+		{
+			if (ip.AddressFamily == AddressFamily.InterNetwork)
+			{
+				return ip.ToString();
+			}
+		}
+		throw new Exception("No network adapters with an IPv4 address in the system!");
 	}
 }

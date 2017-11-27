@@ -1,6 +1,12 @@
-﻿public interface IConnectionService
+﻿namespace EditorConnectionWindow.BaseSystem
 {
-    string Address { get; set; }
-    int Port { get; set; }
-    string URL { get;  }
+    public interface IConnectionService
+    {
+        string Address { get; set; }
+        int Port { get; set; }
+        string URL { get;  }
+        string GetLocalIPAddress();
+    }
 }
+
+
