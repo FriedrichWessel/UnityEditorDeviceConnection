@@ -1,9 +1,11 @@
-﻿using NUnit.Framework; 
+﻿using EditorConnectionWindow.BaseSystem;
+using NUnit.Framework; 
 
 public class ConnectionServiceTest
 {
 
-	private IConnectionService _serviceToTest; 
+	private IConnectionService _serviceToTest;
+	private ICommandScheduler _dummyScheduler;
 	
 	[SetUp]
 	public void RunBeforeEveryTest()
@@ -18,5 +20,6 @@ public class ConnectionServiceTest
 		_serviceToTest.Port = 8080;
 		Assert.AreEqual("127.0.0.1:8080", _serviceToTest.URL);
 	}
+
 
 }
