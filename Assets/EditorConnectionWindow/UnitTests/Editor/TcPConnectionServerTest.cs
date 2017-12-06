@@ -57,17 +57,6 @@ namespace EditorConnectionWindow.BaseSystem.Tests
 			Assert.AreEqual(testData, compareData);
 		}
 
-		[UnityTest]
-		public IEnumerator StartServerShouldOpenATcpSocket()
-		{
-			// TODO move to an Integration test
-			_server.StartServer();
-			yield return null;
-			var testClient = new TcpClient();
-			testClient.Connect(_server.Adress, _server.Port);
-			Assert.IsTrue(_server.IsClientConnected(_localIpAddress));
-			
-		}
 	}
 
 }
