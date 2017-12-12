@@ -12,8 +12,7 @@ using UnityEngine.Assertions.Must;
 
 public class ConnectionService : IConnectionService
 {
-	public event System.Action<string> MessageReceived = (message) => { };
-	public event Action<ServerData> ServerDataReceived = (data) => { }; 
+	 
 	private string _address;
 	private int _port; 
 	
@@ -77,34 +76,7 @@ public class ConnectionService : IConnectionService
 		URL = string.Format("{0}:{1}", Address, Port.ToString());
 	}
 
-	private UdpClient _broadcastReceiver;
-	private IPEndPoint _broadcastReceiveEndPoint;
-	
 
-	public void StartReceiveBroadcast()
-	{
-		_broadcastReceiveEndPoint = new IPEndPoint(IPAddress.Any, 15000); 
-		_broadcastReceiver = new UdpClient(_broadcastReceiveEndPoint);
-		_broadcastReceiver.BeginReceive(UpdateServerUrl, new object());
-	}
-
-	private void UpdateServerUrl(IAsyncResult ar)
-	{
-		Byte[] receiveBytes = _broadcastReceiver.EndReceive(ar, ref _broadcastReceiveEndPoint);
-		string receiveString = Encoding.ASCII.GetString(receiveBytes);
-		ServerDataReceived(new ServerData(receiveString));
-		_broadcastReceiver.Close();
-		StartReceiveBroadcast();
-	}
-
-
-	public void StopReceiveBroadcast()
-	{
-		if (_broadcastReceiver != null)
-		{
-			_broadcastReceiver.Close();
-		}
-	}
 	
 	public string GetLocalIPAddress()
 	{

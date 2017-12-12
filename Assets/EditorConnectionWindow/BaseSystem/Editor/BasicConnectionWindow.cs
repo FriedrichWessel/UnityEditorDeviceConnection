@@ -28,8 +28,8 @@ public class BasicConnectionWindow : EditorWindow
 	private void Setup()
 	{
 		_service = new ConnectionService();
-		_service.ServerDataReceived += UpdateServerData; 
-		_service.StartReceiveBroadcast();
+		//_service.ServerDataReceived += UpdateServerData; 
+		//_service.StartReceiveBroadcast();
 		_popupServerNames = new string[10];
 		UpdateServerNameList();
 		_lastUpdateTime = Time.realtimeSinceStartup;
@@ -42,7 +42,7 @@ public class BasicConnectionWindow : EditorWindow
 		if (_service != null)
 		{
 			_service.Disconnect();
-			_service.StopReceiveBroadcast();
+			//_service.StopReceiveBroadcast();
 		}
 	}
 
