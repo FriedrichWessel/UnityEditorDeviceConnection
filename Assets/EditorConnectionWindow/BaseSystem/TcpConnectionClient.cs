@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using EditorConnectionWindow.BaseSystem;
 using UnityEngine;
 
@@ -30,5 +31,12 @@ public class TcpConnectionClient : IConnectionClient
 			result = reader.ReadLine();
 		}
 		return result;
+	}
+
+	public void SendData(string data)
+	{
+		var stream = new StreamWriter(_tcpClient.GetStream(), Encoding.ASCII);
+		stream.Write(data);
+		stream.Flush();
 	}
 }

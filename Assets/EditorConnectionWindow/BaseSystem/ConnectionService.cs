@@ -43,29 +43,6 @@ public class ConnectionService : IConnectionService
 
 	private IConnectionServer _server;
 
-	public void StartServer()
-	{
-		_server = new TcpConnectionServer(Address, Port);
-		_server.StartServer();
-	}
-
-	public void Tick()
-	{
-		if (_server != null)
-		{
-			_server.Tick();
-		}
-	}
-	
-	public void StopServer()
-	{
-		if (_server != null)
-		{
-			_server.Disconnect();
-			_server = null; 
-		}
-	}
-
 	public void ConnectToServer()
 	{
 		_publisher = new TcpClient();
@@ -111,7 +88,7 @@ public class ConnectionService : IConnectionService
 		_broadcastReceiver.BeginReceive(UpdateServerUrl, new object());
 	}
 
-	private  void UpdateServerUrl(IAsyncResult ar)
+	private void UpdateServerUrl(IAsyncResult ar)
 	{
 		Byte[] receiveBytes = _broadcastReceiver.EndReceive(ar, ref _broadcastReceiveEndPoint);
 		string receiveString = Encoding.ASCII.GetString(receiveBytes);

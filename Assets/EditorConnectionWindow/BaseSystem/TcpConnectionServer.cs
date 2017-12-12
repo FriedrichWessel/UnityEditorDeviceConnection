@@ -67,5 +67,13 @@ namespace EditorConnectionWindow.BaseSystem
 				_tcpListener.Stop();
 			}
 		}
+
+		public void SendDataToAllClients(string data)
+		{
+			foreach (var client in _connectedClients.Values)
+			{
+				client.SendData(data);
+			}
+		}
 	}
 }

@@ -1,9 +1,12 @@
-﻿namespace EditorConnectionWindow.BaseSystem
+﻿using System.Net.Sockets;
+
+namespace EditorConnectionWindow.BaseSystem
 {
 	public interface IConnectionClient  {
 
 		string IpAddress { get;  }
 		bool HasData { get; }
 		string GetData();
+		void SendData(string data);
 	}
 }

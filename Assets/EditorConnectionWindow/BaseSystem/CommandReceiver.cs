@@ -27,8 +27,6 @@ public class CommandReceiver : MonoBehaviour
 		_server.StartServer();
 		ServerText.text = string.Format("Server running on {0}", _server.Adress+":" + _server.Port.ToString());
 		MessageText.text = "Not received";
-		
-		
 		_broadcastCommand = new UdpBroadcastCommand(15000, _server.Adress+":" + _server.Port.ToString());
 		_scheduler.AddCommand(_broadcastCommand);
 	}
