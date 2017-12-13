@@ -87,30 +87,7 @@ public class BasicConnectionWindow : EditorWindow
 
 	}
 
-	private void UpdateAvailableServers(float deltaTime)
-	{
-		bool removedServer = false; 
-		for (int i = _availableServer.Count-1; i >= 0; i--)
-		{
-			if (Time.realtimeSinceStartup - _availableServer[i].LastConnectionTime > 10)
-			{
-				if (_connectedServer == _availableServer[i].ServerData)
-				{
-					_service.Disconnect();
-					_connectedServer = null;
-					_currentServerIndex = 0;
-				}
-				_availableServer.RemoveAt(i);
-				i--;
-				removedServer = true;
-			}
-		}
-
-		if (removedServer)
-		{
-			UpdateServerNameList();
-		}
-	}
+	
 
 	// since there is no relialble Update source for EditorWindows - we take anyshot we can get
 	private void OnInspectorUpdate()
@@ -140,7 +117,31 @@ public class BasicConnectionWindow : EditorWindow
 		// so we store the last seen for the tcp callbacks
 		_currentTimeStamp = Time.realtimeSinceStartup;
 	}
+	
+	private void UpdateAvailableServers(float deltaTime)
+	{
+		bool removedServer = false; 
+		for (int i = _availableServer.Count-1; i >= 0; i--)
+		{
+			if (Time.realtimeSinceStartup - _availableServer[i].LastConnectionTime > 10)
+			{
+				if (_connectedServer == _availableServer[i].ServerData)
+				{
+					_service.Disconnect();
+					_connectedServer = null;
+					_currentServerIndex = 0;
+				}
+				_availableServer.RemoveAt(i);
+				i--;
+				removedServer = true;
+			}
+		}
 
+		if (removedServer)
+		{
+			UpdateServerNameList();
+		}
+	}
 	private void UpdateServerData(ServerData serverData)
 	{
 		bool serverIsRegistered = false; 
@@ -176,7 +177,6 @@ public class BasicConnectionWindow : EditorWindow
 			}
 			_popupServerNames[i+1] = name;
 		}
-		
 	}
 
 	private void ConnectToServer(ServerData serverData)
@@ -191,17 +191,7 @@ public class BasicConnectionWindow : EditorWindow
 		_connectedServer = serverData;
 	}
 	
-	private class AvailableServerData
-	{
-		public ServerData ServerData { get; private set; }
-		public float LastConnectionTime { get; set; }
-
-		public AvailableServerData(ServerData data)
-		{
-			ServerData = data;
-			LastConnectionTime = 0;
-		}
-	}
+	
 
 
 }

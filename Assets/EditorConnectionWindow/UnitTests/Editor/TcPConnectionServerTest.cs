@@ -5,7 +5,7 @@ using NSubstitute;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace EditorConnectionWindow.BaseSystem.Tests
+namespace EditorConnectionWindow.BaseSystem.UnitTests
 {
 	public class TcPConnectionServerTest
 	{

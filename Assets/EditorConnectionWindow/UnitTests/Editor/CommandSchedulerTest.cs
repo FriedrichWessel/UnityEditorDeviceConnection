@@ -4,7 +4,7 @@ using UnityEngine;
 using NUnit.Framework;
 using NSubstitute;
 
-namespace EditorConnectionWindow.BaseSystem.Tests
+namespace EditorConnectionWindow.BaseSystem.UnitTests
 {
 	public class CommandSchedulerTest
 	{
