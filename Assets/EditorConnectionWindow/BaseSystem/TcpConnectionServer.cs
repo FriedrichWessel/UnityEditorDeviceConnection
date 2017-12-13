@@ -12,10 +12,13 @@ namespace EditorConnectionWindow.BaseSystem
 	public class TcpConnectionServer : IConnectionServer {
 		
 		public event Action<string> MessageReceived = (data) => { };
-		
+		public event Action<IConnectionClient> ClientConnected = (client) => { };
+
 		private Dictionary<string,IConnectionClient> _connectedClients = new Dictionary<string, IConnectionClient>();
 		public string Adress { get; private set; }
 		public int Port { get; private set; }
+		
+
 		private TcpListener _tcpListener;
 
 		public TcpConnectionServer(string address, int port)
@@ -32,6 +35,7 @@ namespace EditorConnectionWindow.BaseSystem
 		public void AcceptClient(IConnectionClient connectionClient)
 		{
 			_connectedClients.Add(connectionClient.IpAddress, connectionClient);
+			ClientConnected(connectionClient);
 		}
 
 		public void StartServer()
@@ -46,7 +50,7 @@ namespace EditorConnectionWindow.BaseSystem
 		{
 			TcpListener listener = (TcpListener)ar.AsyncState;
 			var connectionClient = new TcpConnectionClient(listener.EndAcceptTcpClient(ar));
-			_connectedClients.Add( connectionClient.IpAddress,connectionClient);
+			AcceptClient(connectionClient);
 		}
 
 		public void Tick()
@@ -60,7 +64,7 @@ namespace EditorConnectionWindow.BaseSystem
 			}
 		}
 
-		public void Disconnect()
+		public void StopServer()
 		{
 			if (_tcpListener != null)
 			{

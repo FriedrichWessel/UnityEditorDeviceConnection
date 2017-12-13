@@ -112,5 +112,23 @@ namespace EditorConnectionWindow.BaseSystem.UnitTests
 			_serverList.Tick();
 			Assert.IsTrue(called);
 		}
+
+		[Test]
+		public void RemoveSelectedServerShouldRaiseRemoveSelectedServerEvent()
+		{
+			var testServerData = new ServerData("192.168.0.1:8080");
+			var testData = new AvailableServerData(testServerData);
+			_serverList.AddAvailableServer(testData);
+			_serverList.SelectServerFromList(testData);
+			bool called = false;
+			_serverList.RemoveSelectedServer += (removedServer) =>
+			{
+				called = true;
+				Assert.AreEqual(testServerData, removedServer);
+			};
+			_timeProvider.RealtimeSinceStartup.Returns(ServerList.SERVER_INACTIVE_TOLERANCE + 0.1f);
+			_serverList.Tick();
+			Assert.IsTrue(called);
+		}
 	}
 }

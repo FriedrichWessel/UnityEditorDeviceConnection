@@ -10,7 +10,7 @@ namespace EditorConnectionWindow.BaseSystem.UnitTests
 	public class TcPConnectionServerTest
 	{
 	
-		private IConnectionServer _server;
+		private TcpConnectionServer _server;
 		private IConnectionClient _testClient;
 		private string _localIpAddress; 
 		
@@ -26,7 +26,7 @@ namespace EditorConnectionWindow.BaseSystem.UnitTests
 		[TearDown]
 		public void RunAfterEveryTest()
 		{
-			_server.Disconnect();
+			_server.StopServer();
 		}
 
 		[Test]

@@ -26,7 +26,7 @@ public class TcpConnectionServerTest  {
 	public void RunAfterEveryTest()
 	{
 		_localIpAddress = null;
-		_server.Disconnect();
+		_server.StopServer();
 		_server = null;
 	}
 	
@@ -67,6 +67,21 @@ public class TcpConnectionServerTest  {
 		Assert.IsTrue(testClient.GetStream().DataAvailable);
 		_server.Tick();
 		Assert.IsFalse(received);
+		
+	}
+
+	[UnityTest]
+	public IEnumerator ClientConnectShouldRaiseClientConnectedEvent()
+	{
+		TcpClient testClient = new TcpClient();
+		bool called = false;
+		_server.ClientConnected += (client) =>
+		{
+			called = true;
+		};
+		yield return ConnectTestClientToServer(testClient);
+		yield return new WaitForSeconds(0.5f);
+		Assert.IsTrue(called);
 		
 	}
 

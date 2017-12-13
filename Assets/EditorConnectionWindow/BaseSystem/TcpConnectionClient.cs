@@ -39,4 +39,9 @@ public class TcpConnectionClient : IConnectionClient
 		stream.Write(data);
 		stream.Flush();
 	}
+
+	public void ConnectToServer(string localIpAddress, int testPort)
+	{
+		throw new System.NotImplementedException();
+	}
 }

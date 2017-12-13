@@ -38,7 +38,7 @@ public class CommandReceiver : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		_server.Disconnect();
+		_server.StopServer();
 		_scheduler.RemoveCommand(_broadcastCommand);
 	}
 

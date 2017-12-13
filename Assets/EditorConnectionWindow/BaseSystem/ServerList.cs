@@ -12,8 +12,10 @@ namespace EditorConnectionWindow.BaseSystem
 		public const float SERVER_INACTIVE_TOLERANCE = 2;
 		
 		public event Action ServerListChanged = () => { };
+
 		public event Action<ServerData> ServerRemoved = (removedServer) => { };
 		public event Action<ServerData> ServerAdded = (newServer) => { };
+		public event Action<ServerData> RemoveSelectedServer = (activeServer) => { };
 		
 		public List<AvailableServerData> AvailableServers { get; private set; }
 		
@@ -26,6 +28,7 @@ namespace EditorConnectionWindow.BaseSystem
 		public AvailableServerData SelectedServer {
 			get { return AvailableServers[_selectedServerIndex]; }
 		}
+
 
 
 		public ServerList(ITimeProvider timeProvider)
@@ -90,6 +93,10 @@ namespace EditorConnectionWindow.BaseSystem
 				if (_timeProvider.RealtimeSinceStartup - AvailableServers[i].LastConnectionTime > SERVER_INACTIVE_TOLERANCE)
 				{
 					removedServer = AvailableServers[i].ServerData;
+					if (removedServer == SelectedServer.ServerData)
+					{
+						RemoveSelectedServer(removedServer);
+					}
 					AvailableServers.RemoveAt(i);
 					i--;
 				}

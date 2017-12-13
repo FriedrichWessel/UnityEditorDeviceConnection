@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using EditorConnectionWindow.BaseSystem;
+using EditorConnectionWindow.BaseSystem.TimeProvider;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,27 +19,65 @@ public class BasicConnectionWindow : EditorWindow
 		window.Setup();
 		window.Show();
 	}
- 
-	private ConnectionService _service;
-	private ServerData _connectedServer;
-	private List<AvailableServerData> _availableServer = new List<AvailableServerData>();
-	private string[] _popupServerNames;
-	private float _lastUpdateTime;
-	private float _currentTimeStamp; 
+
+	private UnityTimeProvider _timeProvider;
+	private ServerList _serverList;
 	
+	private List<string> _popupServerNames = new List<string>();
+	private int _currentServerIndex;
+	private IConnectionClient _connectionClient;
+
 	private void Setup()
 	{
-		_service = new ConnectionService();
-		//_service.ServerDataReceived += UpdateServerData; 
-		//_service.StartReceiveBroadcast();
-		_popupServerNames = new string[10];
-		UpdateServerNameList();
-		_lastUpdateTime = Time.realtimeSinceStartup;
-		_currentTimeStamp = Time.realtimeSinceStartup;
+		_timeProvider = new UnityTimeProvider();
+		_serverList = new ServerList(_timeProvider);
+		_serverList.ServerAdded += AddServerToDropDown;
+		_serverList.ServerRemoved += RemoveServerFromDropDown;
+		_serverList.RemoveSelectedServer += DisconnectFromSelectedServer;
+		_serverList.StartListingForServers(15099);
+
+		var client = new TcpClient();
+		_connectionClient = new TcpConnectionClient(client);
 
 	}
 
-	private void OnDestroy()
+	private void DisconnectFromSelectedServer(ServerData serverData)
+	{
+		
+	}
+
+	private void RemoveServerFromDropDown(ServerData serverData)
+	{
+		_popupServerNames.Remove(serverData.IpAddress);
+	}
+
+	private void AddServerToDropDown(ServerData serverData)
+	{
+		_popupServerNames.Add(serverData.IpAddress);
+	}
+
+	void OnGUI()
+	{
+		if (_serverList == null) // react on recompile
+		{
+			return;
+		}
+		if (_popupServerNames.Count == 0)
+		{
+			return;
+		}
+		
+		int index = _currentServerIndex;
+		index = EditorGUILayout.Popup(_currentServerIndex, _popupServerNames.ToArray());
+		if (index != _currentServerIndex && index > 0)
+		{
+			_serverList.SelectServerFromList(_serverList.AvailableServers[index]);
+			_currentServerIndex = index;
+			
+		}
+		
+	}
+	/*private void OnDestroy()
 	{
 		if (_service != null)
 		{
@@ -46,8 +86,8 @@ public class BasicConnectionWindow : EditorWindow
 		}
 	}
 
-	private string _command;
-	private int _currentServerIndex; 
+	
+
 	void OnGUI()
 	{
 		UpdateWindow();
@@ -189,7 +229,7 @@ public class BasicConnectionWindow : EditorWindow
 		_service.Port = serverData.Port;
 		_service.ConnectToServer();
 		_connectedServer = serverData;
-	}
+	}*/
 	
 	
 
