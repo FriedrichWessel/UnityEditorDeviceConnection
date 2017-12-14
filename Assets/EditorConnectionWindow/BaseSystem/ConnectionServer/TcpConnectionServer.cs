@@ -11,7 +11,7 @@ namespace EditorConnectionWindow.BaseSystem
 {
 	public class TcpConnectionServer : IConnectionServer {
 		
-		public event Action<string> MessageReceived = (data) => { };
+		public event Action<string> DataReceived = (data) => { };
 		public event Action<IConnectionClient> ClientConnected = (client) => { };
 
 		private Dictionary<string,IConnectionClient> _connectedClients = new Dictionary<string, IConnectionClient>();
@@ -59,7 +59,7 @@ namespace EditorConnectionWindow.BaseSystem
 			{
 				if (client.HasData)
 				{
-					MessageReceived(client.GetData());
+					DataReceived(client.GetData());
 				}
 			}
 		}

@@ -17,8 +17,8 @@ namespace IntegrationTests
 		[SetUp]
 		public void RunBeforeEveryTest()
 		{
-			var service = new ConnectionService();
-			_localIpAddress = service.GetLocalIPAddress();
+			var networkUtilities = new NetworkUtilities();
+			_localIpAddress = networkUtilities.GetLocalIPAddress();
 			_testPort = 15987;
 			_testListener = new TcpConnectionServer(_localIpAddress,_testPort );
 			_testListener.StartServer();

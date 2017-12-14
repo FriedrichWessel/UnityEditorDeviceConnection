@@ -17,8 +17,8 @@ public class TcpConnectionServerTest  {
 	[SetUp]
 	public void RunBeforeEveryTest()
 	{
-		var service = new ConnectionService();
-		_localIpAddress = service.GetLocalIPAddress();
+		var networkUtilities = new NetworkUtilities();
+		_localIpAddress = networkUtilities.GetLocalIPAddress();
 		_server = new TcpConnectionServer(_localIpAddress, 15845);
 	}
 	
@@ -47,7 +47,7 @@ public class TcpConnectionServerTest  {
 		TcpClient testClient = new TcpClient();
 		yield return ConnectTestClientToServer(testClient);
 		string receivedMessage = string.Empty;
-		_server.MessageReceived += (m) => { receivedMessage = m; };
+		_server.DataReceived += (m) => { receivedMessage = m; };
 		var stream = new StreamWriter(testClient.GetStream(), Encoding.ASCII);
 		stream.Write("test");
 		stream.Close();
@@ -60,7 +60,7 @@ public class TcpConnectionServerTest  {
 	{
 		var testClient = new TcpClient();
 		bool received = false;
-		_server.MessageReceived += m => received = true;
+		_server.DataReceived += m => received = true;
 		yield return ConnectTestClientToServer(testClient);
 		_server.SendDataToAllClients("test");
 		yield return new WaitForSeconds(0.5f);

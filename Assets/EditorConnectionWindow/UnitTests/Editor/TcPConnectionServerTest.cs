@@ -17,8 +17,8 @@ namespace EditorConnectionWindow.BaseSystem.UnitTests
 		[SetUp]
 		public void RunBeforeEveryTest()
 		{
-			var service = new ConnectionService();
-			_localIpAddress = service.GetLocalIPAddress();
+			var networkUtilities = new NetworkUtilities();
+			_localIpAddress = networkUtilities.GetLocalIPAddress();
 			_server = new TcpConnectionServer(_localIpAddress, 15845);
 			_testClient = Substitute.For<IConnectionClient>();
 		}
@@ -52,7 +52,7 @@ namespace EditorConnectionWindow.BaseSystem.UnitTests
 			_testClient.HasData.Returns(true);
 			_testClient.GetData().Returns(testData);
 			_server.AcceptClient(_testClient);
-			_server.MessageReceived += (data) =>{compareData = data;};
+			_server.DataReceived += (data) =>{compareData = data;};
 			_server.Tick(); 
 			Assert.AreEqual(testData, compareData);
 		}
