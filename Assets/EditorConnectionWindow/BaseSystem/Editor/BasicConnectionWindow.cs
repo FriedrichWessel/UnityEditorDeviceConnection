@@ -26,6 +26,7 @@ namespace EditorConnectionWindow.BaseSystem
 		private int _currentServerIndex;
 		private IConnectionClient _connectionClient;
 		private string _command;
+		private int _broadcastPort;
 
 		private void Setup()
 		{
@@ -34,10 +35,15 @@ namespace EditorConnectionWindow.BaseSystem
 			_serverList.ServerAdded += AddServerToDropDown;
 			_serverList.ServerRemoved += RemoveServerFromDropDown;
 			_serverList.RemoveSelectedServer += DisconnectFromSelectedServer;
-			_serverList.StartListingForServers(15000);
+			StartListenToBroadcast();
 			_popupServerNames.Clear();
 			_connectionClient = new TcpConnectionClient();
 
+		}
+
+		private void StartListenToBroadcast()
+		{
+			_serverList.StartListingForServers(_broadcastPort);
 		}
 
 		private void EditorUpdateLoop()
@@ -87,6 +93,15 @@ namespace EditorConnectionWindow.BaseSystem
 
 		void OnGUI()
 		{
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Broadcast Port: ");
+			_broadcastPort = EditorGUILayout.IntField(_broadcastPort);
+			if (GUILayout.Button("StartListen"))
+			{
+				StartListenToBroadcast();
+			}
+			GUILayout.EndHorizontal();
+			
 			if (_serverList == null) // react on recompile
 			{
 				Setup();
