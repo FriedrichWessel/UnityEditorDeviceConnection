@@ -23,8 +23,9 @@ namespace EditorConnectionWindow.BaseSystem
 		public EditorConnectionServer(int serverPort, int broadcastPort)
 		{
 			var service = new NetworkUtilities();
-			var scheduler = new CommandScheduler();
-			var serverConnection = new TcpConnectionServer(service.GetLocalIPAddress(), serverPort);
+			_scheduler = new CommandScheduler();
+			_server = new TcpConnectionServer(service.GetLocalIPAddress(), serverPort);
+			_server.DataReceived += PublishReceivedData;
 			_broadcastPort = broadcastPort;
 			SetupBroadcastCommand();
 		}
