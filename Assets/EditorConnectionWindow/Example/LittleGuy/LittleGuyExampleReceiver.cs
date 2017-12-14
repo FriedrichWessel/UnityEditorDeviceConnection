@@ -29,7 +29,7 @@ public class LittleGuyExampleReceiver : MonoBehaviour
 				View.StartIdleAnimation();
 				break;
 			default:
-				Debug.Log(string.Format("Command {0} not available", command));
+				_server.SendDataToAllClients(string.Format("Command {0} not available", command));
 				break;
 				
 		}

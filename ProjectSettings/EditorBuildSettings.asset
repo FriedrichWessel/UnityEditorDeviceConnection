@@ -6,5 +6,5 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Test01.unity
-    guid: 9c9df1af44832411b90682cd3c3d1572
+    path: Assets/EditorConnectionWindow/Example/Scenes/LittleGuyExampleWithReceiver.unity
+    guid: fd34f35cdf6464d23b496fddfbd10865

@@ -9,6 +9,7 @@
 		void StartServer();
 		void Tick();
 		void StopServer();
+		void SendDataToAllClients(string data);
 	}
 
 }

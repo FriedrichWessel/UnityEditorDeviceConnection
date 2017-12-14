@@ -24,9 +24,10 @@ namespace EditorConnectionWindow.BaseSystem
 
 		private List<string> _popupServerNames = new List<string>();
 		private int _currentServerIndex;
-		private IConnectionClient _connectionClient;
 		private string _command;
 		private int _broadcastPort;
+
+		protected IConnectionClient ConnectionClient { get; private set; }
 
 		private void Setup()
 		{
@@ -36,8 +37,14 @@ namespace EditorConnectionWindow.BaseSystem
 			_serverList.ServerRemoved += RemoveServerFromDropDown;
 			_serverList.RemoveSelectedServer += DisconnectFromSelectedServer;
 			_popupServerNames.Clear();
-			_connectionClient = new TcpConnectionClient();
+			ConnectionClient = new TcpConnectionClient();
+			PostSetup();
 
+		}
+
+		protected virtual void PostSetup()
+		{
+			
 		}
 
 		private void StartListenToBroadcast()
@@ -60,16 +67,16 @@ namespace EditorConnectionWindow.BaseSystem
 			{
 				_serverList.StopListiningForServers();
 			}
-			if (_connectionClient != null)
+			if (ConnectionClient != null)
 			{
-				_connectionClient.Disconnect();
+				ConnectionClient.Disconnect();
 			}
 
 		}
 
 		private void DisconnectFromSelectedServer(ServerData serverData)
 		{
-			_connectionClient.Disconnect();
+			ConnectionClient.Disconnect();
 		}
 
 		private void RemoveServerFromDropDown(ServerData serverData)
@@ -90,7 +97,14 @@ namespace EditorConnectionWindow.BaseSystem
 			}
 		}
 
-		void OnGUI()
+		protected virtual void OnGUI()
+		{
+			DrawConnectionControls();
+			DrawServerList();
+			DrawInputArea();
+		}
+
+		protected void DrawConnectionControls()
 		{
 			GUILayout.BeginHorizontal();
 			GUILayout.Label("Broadcast Port: ");
@@ -100,7 +114,10 @@ namespace EditorConnectionWindow.BaseSystem
 				StartListenToBroadcast();
 			}
 			GUILayout.EndHorizontal();
-			
+		}
+		
+		protected void DrawServerList()
+		{
 			if (_serverList == null) // react on recompile
 			{
 				Setup();
@@ -109,7 +126,7 @@ namespace EditorConnectionWindow.BaseSystem
 			{
 				return;
 			}
-
+			
 			int index = _currentServerIndex;
 			index = EditorGUILayout.Popup(_currentServerIndex, _popupServerNames.ToArray());
 			if (index != _currentServerIndex && index > 0)
@@ -118,13 +135,25 @@ namespace EditorConnectionWindow.BaseSystem
 				_currentServerIndex = index;
 				ConnectToServer();
 			}
-
+		}
+		
+		protected void DrawInputArea()
+		{
+			if (_serverList == null) // react on recompile
+			{
+				Setup();
+			}
+			if (_popupServerNames.Count == 0)
+			{
+				return;
+			}
+			
 			if (_serverList.SelectedServer != null)
 			{
 				_command = GUILayout.TextField(_command);
 				if (GUILayout.Button("Send"))
 				{
-					_connectionClient.SendData(_command);
+					ConnectionClient.SendData(_command);
 				}
 			}
 		}
@@ -132,7 +161,7 @@ namespace EditorConnectionWindow.BaseSystem
 		private void ConnectToServer()
 		{
 			var serverData = _serverList.SelectedServer.ServerData;
-			_connectionClient.ConnectToServer(serverData.IpAddress, serverData.Port);
+			ConnectionClient.ConnectToServer(serverData.IpAddress, serverData.Port);
 		}
 	}
 }

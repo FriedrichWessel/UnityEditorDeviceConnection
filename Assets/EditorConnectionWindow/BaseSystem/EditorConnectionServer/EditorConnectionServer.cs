@@ -69,5 +69,10 @@ namespace EditorConnectionWindow.BaseSystem
 			_scheduler.Tick();
 			_server.Tick();
 		}
+
+		public void SendDataToAllClients(string data)
+		{
+			_server.SendDataToAllClients(data);
+		}
 	}
 }
