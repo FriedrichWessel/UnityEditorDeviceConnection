@@ -144,6 +144,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MessageText: {fileID: 117712897}
   ServerText: {fileID: 1723775969}
+  ServerPort: 8081
+  BroadcastPort: 15010
 --- !u!114 &15911954
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -208,8 +210,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 15911952}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 286.5, y: 179, z: 0}
-  m_LocalScale: {x: 0.71625, y: 0.71625, z: 0.71625}
+  m_LocalPosition: {x: 788, y: 309.5, z: 0}
+  m_LocalScale: {x: 1.97, y: 1.97, z: 1.97}
   m_Children:
   - {fileID: 1723775971}
   - {fileID: 117712899}
@@ -284,7 +286,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 117712896}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 167.91273, z: 0}
+  m_LocalPosition: {x: 0, y: 75.1066, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 15911957}
@@ -565,7 +567,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1723775968}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 249.91275, z: 0}
+  m_LocalPosition: {x: 0, y: 157.1066, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 15911957}
