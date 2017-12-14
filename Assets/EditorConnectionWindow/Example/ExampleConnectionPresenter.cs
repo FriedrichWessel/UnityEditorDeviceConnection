@@ -24,8 +24,8 @@ public class ExampleConnectionPresenter : MonoBehaviour
 	{
 		var service = new NetworkUtilities();
 		var scheduler = new CommandScheduler();
-		var serverConnection = new TcpConnectionServer(service.GetLocalIPAddress(), 8081);
-		_server = new EditorConnectionServer(serverConnection, scheduler, 15000);
+		var serverConnection = new TcpConnectionServer(service.GetLocalIPAddress(), ServerPort);
+		_server = new EditorConnectionServer(serverConnection, scheduler, BroadcastPort);
 		ServerText.text = string.Format("Server running on {0}", serverConnection.Adress+":" + serverConnection.Port.ToString());
 	}
 

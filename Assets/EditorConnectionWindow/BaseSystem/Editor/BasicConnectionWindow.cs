@@ -35,7 +35,6 @@ namespace EditorConnectionWindow.BaseSystem
 			_serverList.ServerAdded += AddServerToDropDown;
 			_serverList.ServerRemoved += RemoveServerFromDropDown;
 			_serverList.RemoveSelectedServer += DisconnectFromSelectedServer;
-			StartListenToBroadcast();
 			_popupServerNames.Clear();
 			_connectionClient = new TcpConnectionClient();
 
