@@ -11,24 +11,34 @@ public class TcpConnectionClient : IConnectionClient
  
 	public string IpAddress { get; private set; }
 	public bool HasData {
-		get { return _tcpClient.GetStream().DataAvailable; }
+		get {
+			if (_tcpClient.Connected)
+			{
+				return _tcpClient.GetStream().DataAvailable; 
+			}
+			return false;
+		}
 	}
 	
-	public TcpConnectionClient(TcpClient clientSocket) 
+	public TcpConnectionClient() 
+	{
+		_tcpClient = new TcpClient();
+	}
+
+	public TcpConnectionClient(TcpClient clientSocket)
 	{
 		_tcpClient = clientSocket;
 		var adress = ((IPEndPoint)clientSocket.Client.RemoteEndPoint).Address.ToString();
 		IpAddress = adress;
 	}
-	
 
 	public string GetData()
 	{
 		string result = string.Empty;
 		if (HasData)
 		{
-			var reader = new StreamReader(_tcpClient.GetStream(), true);
-			result = reader.ReadLine();
+			var stream = new StreamReader(_tcpClient.GetStream());
+			result = stream.ReadLine();
 		}
 		return result;
 	}
@@ -36,12 +46,22 @@ public class TcpConnectionClient : IConnectionClient
 	public void SendData(string data)
 	{
 		var stream = new StreamWriter(_tcpClient.GetStream(), Encoding.ASCII);
-		stream.Write(data);
+		stream.WriteLine(data);
 		stream.Flush();
 	}
 
-	public void ConnectToServer(string localIpAddress, int testPort)
+	public void ConnectToServer(string ipAddress, int port)
 	{
-		throw new System.NotImplementedException();
+		IpAddress = ipAddress;
+		_tcpClient.Connect(ipAddress, port);
+	}
+
+	public void Disconnect()
+	{
+		if (_tcpClient.Connected)
+		{
+			_tcpClient.GetStream().Close();
+			_tcpClient.Close();
+		}
 	}
 }

@@ -33,8 +33,7 @@ namespace IntegrationTests
 		[UnityTest]
 		public IEnumerator ClientShouldBeAbleToConnectToAServer()
 		{
-			var testClient = new TcpClient();
-			var testConnectionClient = new TcpConnectionClient(testClient);
+			var testConnectionClient = new TcpConnectionClient();
 			bool called = false;
 			_testListener.ClientConnected += (client) =>
 			{
@@ -44,6 +43,31 @@ namespace IntegrationTests
 			testConnectionClient.ConnectToServer(_localIpAddress, _testPort);
 			yield return new WaitForSeconds(0.5f);
 			Assert.IsTrue(called);
+		}
+
+		[UnityTest]
+		public IEnumerator ConnectedClientCanReceiveData()
+		{
+			var testConnectionClient = new TcpConnectionClient();
+			testConnectionClient.ConnectToServer(_localIpAddress, _testPort);
+			yield return new WaitForSeconds(0.5f);
+			_testListener.SendDataToAllClients("test");
+			yield return new WaitForSeconds(0.5f);
+			Assert.IsTrue(testConnectionClient.HasData);
+			yield return new WaitForEndOfFrame();
+			Assert.AreEqual("test", testConnectionClient.GetData());
+		}
+		
+		[UnityTest]
+		public IEnumerator DisconnectedClientShouldNotReceiveData()
+		{
+			var testConnectionClient = new TcpConnectionClient();
+			testConnectionClient.ConnectToServer(_localIpAddress, _testPort);
+			yield return new WaitForSeconds(0.5f);
+			testConnectionClient.Disconnect();
+			_testListener.SendDataToAllClients("test");
+			yield return new WaitForSeconds(0.5f);
+			Assert.IsFalse(testConnectionClient.HasData);
 		}
 	}
 

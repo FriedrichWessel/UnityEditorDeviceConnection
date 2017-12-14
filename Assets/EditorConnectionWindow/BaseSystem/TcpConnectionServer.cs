@@ -68,6 +68,7 @@ namespace EditorConnectionWindow.BaseSystem
 		{
 			if (_tcpListener != null)
 			{
+				_tcpListener.Server.Close();
 				_tcpListener.Stop();
 			}
 		}

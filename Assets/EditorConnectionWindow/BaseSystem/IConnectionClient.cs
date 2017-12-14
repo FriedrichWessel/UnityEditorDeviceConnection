@@ -8,5 +8,7 @@ namespace EditorConnectionWindow.BaseSystem
 		bool HasData { get; }
 		string GetData();
 		void SendData(string data);
+		void ConnectToServer(string ipAddress, int port);
+		void Disconnect();
 	}
 }

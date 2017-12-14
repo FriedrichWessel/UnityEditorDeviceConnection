@@ -85,6 +85,25 @@ public class TcpConnectionServerTest  {
 		
 	}
 
+	[UnityTest]
+	[Ignore("... until we figure out a way to test this against local without port trouble")]
+	public IEnumerator ServerShouldAcceptMultipleClients()
+	{
+		var client1 = new TcpClient();
+		var client2 = new TcpClient();
+
+		List<IConnectionClient> acceptedClients = new List<IConnectionClient>(9);
+		_server.ClientConnected += (client) =>
+		{
+			acceptedClients.Add(client);
+		};
+		yield return ConnectTestClientToServer(client1);
+		yield return ConnectTestClientToServer(client2);
+		Assert.AreEqual(2,acceptedClients.Count);
+		Assert.Contains(client1, acceptedClients);
+		Assert.Contains(client2, acceptedClients);
+	}
+
 	private IEnumerator ConnectTestClientToServer(TcpClient testClient)
 	{
 		_server.StartServer();

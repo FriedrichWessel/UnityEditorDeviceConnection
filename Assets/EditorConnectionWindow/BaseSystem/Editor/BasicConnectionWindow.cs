@@ -16,9 +16,12 @@ public class BasicConnectionWindow : EditorWindow
 	{
 		// Get existing open window or if none, make a new one:
 		var window = (BasicConnectionWindow) EditorWindow.GetWindow(typeof(BasicConnectionWindow));
+		EditorApplication.update += window.EditorUpdateLoop;
 		window.Setup();
 		window.Show();
 	}
+
+	
 
 	private UnityTimeProvider _timeProvider;
 	private ServerList _serverList;
@@ -26,6 +29,7 @@ public class BasicConnectionWindow : EditorWindow
 	private List<string> _popupServerNames = new List<string>();
 	private int _currentServerIndex;
 	private IConnectionClient _connectionClient;
+	private string _command;
 
 	private void Setup()
 	{
@@ -34,16 +38,37 @@ public class BasicConnectionWindow : EditorWindow
 		_serverList.ServerAdded += AddServerToDropDown;
 		_serverList.ServerRemoved += RemoveServerFromDropDown;
 		_serverList.RemoveSelectedServer += DisconnectFromSelectedServer;
-		_serverList.StartListingForServers(15099);
+		_serverList.StartListingForServers(15000);
+		_popupServerNames.Clear();
+		_connectionClient = new TcpConnectionClient();
 
-		var client = new TcpClient();
-		_connectionClient = new TcpConnectionClient(client);
+	}
+	
+	private void EditorUpdateLoop()
+	{
+		if (_serverList == null)
+		{
+			return;
+		}
+		_serverList.Tick();
+	}
 
+	private void OnDestroy()
+	{
+		if (_serverList != null)
+		{
+			_serverList.StopListiningForServers();
+		}
+		if (_connectionClient != null)
+		{
+			_connectionClient.Disconnect();
+		}
+		
 	}
 
 	private void DisconnectFromSelectedServer(ServerData serverData)
 	{
-		
+		_connectionClient.Disconnect();
 	}
 
 	private void RemoveServerFromDropDown(ServerData serverData)
@@ -53,14 +78,22 @@ public class BasicConnectionWindow : EditorWindow
 
 	private void AddServerToDropDown(ServerData serverData)
 	{
+		var oldCount = _popupServerNames.Count;
 		_popupServerNames.Add(serverData.IpAddress);
+		if (oldCount == 0)
+		{
+			_currentServerIndex = 0;
+			_serverList.SelectServerFromList(_serverList.AvailableServers[_currentServerIndex]);
+			ConnectToServer();
+			
+		}
 	}
 
 	void OnGUI()
 	{
 		if (_serverList == null) // react on recompile
 		{
-			return;
+			Setup();
 		}
 		if (_popupServerNames.Count == 0)
 		{
@@ -73,165 +106,22 @@ public class BasicConnectionWindow : EditorWindow
 		{
 			_serverList.SelectServerFromList(_serverList.AvailableServers[index]);
 			_currentServerIndex = index;
-			
+			ConnectToServer();
 		}
-		
-	}
-	/*private void OnDestroy()
-	{
-		if (_service != null)
-		{
-			_service.Disconnect();
-			//_service.StopReceiveBroadcast();
-		}
-	}
 
-	
-
-	void OnGUI()
-	{
-		UpdateWindow();
-		if (_service == null || _popupServerNames == null) // react on re-compile
+		if (_serverList.SelectedServer != null)
 		{
-			return;
-			
-		}
-		
-		if(_popupServerNames.Length > 0)
-		{
-			int index = _currentServerIndex;
-			index = EditorGUILayout.Popup(_currentServerIndex, _popupServerNames);
-			if (index != _currentServerIndex && index > 0)
+			_command = GUILayout.TextField(_command);
+			if (GUILayout.Button("Send"))
 			{
-				var server = _availableServer[index-1];
-				ConnectToServer(server.ServerData);
-			}
-			if (_connectedServer != null)
-			{
-				_currentServerIndex = index;
-				if (GUILayout.Button("StopServer"))
-				{
-					_service.Disconnect();
-					Setup();
-				}
-				
-				_command = GUILayout.TextField(_command);
-				if (GUILayout.Button("Send"))
-				{
-					_service.Send(_command);
-				}
-			}
-			_currentServerIndex = index;
-		}
-		
-
-	}
-
-	
-
-	// since there is no relialble Update source for EditorWindows - we take anyshot we can get
-	private void OnInspectorUpdate()
-	{
-		UpdateWindow();
-	}
-	
-	// since there is no relialble Update source for EditorWindows - we take anyshot we can get
-	private void Update()
-	{
-		UpdateWindow();
-	}
-
-	private void UpdateWindow()
-	{
-		if (_service == null || _popupServerNames == null)
-		{
-			Setup();
-		}
-		var timeSinceLastServerListUpdate = Time.realtimeSinceStartup - _lastUpdateTime;
-		if (timeSinceLastServerListUpdate > 1)
-		{
-			UpdateAvailableServers(timeSinceLastServerListUpdate);
-			_lastUpdateTime = Time.realtimeSinceStartup;
-		}
-		// realtime can only be used in Main.Thread
-		// so we store the last seen for the tcp callbacks
-		_currentTimeStamp = Time.realtimeSinceStartup;
-	}
-	
-	private void UpdateAvailableServers(float deltaTime)
-	{
-		bool removedServer = false; 
-		for (int i = _availableServer.Count-1; i >= 0; i--)
-		{
-			if (Time.realtimeSinceStartup - _availableServer[i].LastConnectionTime > 10)
-			{
-				if (_connectedServer == _availableServer[i].ServerData)
-				{
-					_service.Disconnect();
-					_connectedServer = null;
-					_currentServerIndex = 0;
-				}
-				_availableServer.RemoveAt(i);
-				i--;
-				removedServer = true;
+				_connectionClient.SendData(_command);
 			}
 		}
-
-		if (removedServer)
-		{
-			UpdateServerNameList();
-		}
-	}
-	private void UpdateServerData(ServerData serverData)
-	{
-		bool serverIsRegistered = false; 
-		foreach (var server in _availableServer)
-		{
-			if (server.ServerData.IpAddress == serverData.IpAddress)
-			{
-				server.LastConnectionTime = _currentTimeStamp;
-				serverIsRegistered = true;
-			}
-		}
-		if (!serverIsRegistered)
-		{ 
-			_availableServer.Add(new AvailableServerData(serverData));
-			UpdateServerNameList();
-		}
 	}
 
-	private void UpdateServerNameList()
+	private void ConnectToServer()
 	{
-		if (_availableServer.Count > _popupServerNames.Length -1)
-		{
-			_popupServerNames = new string[_popupServerNames.Length+10];
-		}
-		_popupServerNames[0] = "None";
-		
-		for (int i= 0; i < _popupServerNames.Length-1; i++)
-		{
-			string name = null;
-			if (i < _availableServer.Count)
-			{
-				name = _availableServer[i].ServerData.IpAddress;
-			}
-			_popupServerNames[i+1] = name;
-		}
+		var serverData = _serverList.SelectedServer.ServerData;
+		_connectionClient.ConnectToServer(serverData.IpAddress, serverData.Port);
 	}
-
-	private void ConnectToServer(ServerData serverData)
-	{
-		if (_service.IsConnected())
-		{
-			_service.Disconnect();
-		}
-		_service.Address = serverData.IpAddress;
-		_service.Port = serverData.Port;
-		_service.ConnectToServer();
-		_connectedServer = serverData;
-	}*/
-	
-	
-
-
 }
