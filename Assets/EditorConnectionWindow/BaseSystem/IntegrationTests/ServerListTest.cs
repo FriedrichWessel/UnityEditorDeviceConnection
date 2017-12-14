@@ -1,11 +1,10 @@
 ﻿using System.Collections;
 using EditorConnectionWindow.BaseSystem;
-using EditorConnectionWindow.BaseSystem.TimeProvider;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace IntegrationTests
+namespace EditorConnectionWindow.BaseSystem.IntegrationTests
 {
 	public class ServerListTest  {
 		private ServerList _testList;

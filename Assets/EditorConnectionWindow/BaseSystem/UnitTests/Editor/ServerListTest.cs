@@ -1,6 +1,4 @@
 ﻿using System;
-using EditorConnectionWindow.BaseSystem;
-using EditorConnectionWindow.BaseSystem.TimeProvider;
 using NSubstitute;
 using NUnit.Framework;
 

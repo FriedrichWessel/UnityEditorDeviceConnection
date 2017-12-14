@@ -1,6 +1,4 @@
-﻿using System.Net.Sockets;
-
-namespace EditorConnectionWindow.BaseSystem
+﻿namespace EditorConnectionWindow.BaseSystem
 {
 	public interface IConnectionClient  {
 

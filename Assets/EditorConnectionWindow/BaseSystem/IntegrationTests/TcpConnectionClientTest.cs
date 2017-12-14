@@ -6,7 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace IntegrationTests
+namespace EditorConnectionWindow.BaseSystem.IntegrationTests
 {
 	public class TcpConnectionClientTest  {
 

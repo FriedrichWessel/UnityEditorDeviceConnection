@@ -1,8 +1,11 @@
 ﻿using System;
 
-public interface IEditorConnectionServer : IDisposable
+namespace EditorConnectionWindow.BaseSystem
 {
-	event Action<string> DataReceived;
-	void StartServer();
-	void StopServer();
+	public interface IEditorConnectionServer : IDisposable
+	{
+		event Action<string> DataReceived;
+		void StartServer();
+		void StopServer();
+	}
 }

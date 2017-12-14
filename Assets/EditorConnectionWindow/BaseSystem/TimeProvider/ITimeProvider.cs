@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace EditorConnectionWindow.BaseSystem.TimeProvider
+namespace EditorConnectionWindow.BaseSystem
 {
 	public interface ITimeProvider
 	{

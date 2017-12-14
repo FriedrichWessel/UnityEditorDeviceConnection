@@ -1,5 +1,8 @@
-﻿public interface ICommand
+﻿namespace EditorConnectionWindow.BaseSystem
 {
-	void Execute();
-	bool IsRunning { get; }
+	public interface ICommand
+	{
+		void Execute();
+		bool IsRunning { get; }
+	}
 }
